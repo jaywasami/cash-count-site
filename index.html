@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>清點單計算</title>
+  <style>
+    :root {
+      --bg: #17151c;
+      --panel: #0b0b0d;
+      --paper: #f4f1ec;
+      --line: #f3f3f3;
+      --muted-line: #4c4658;
+      --orange: #ff7a00;
+      --blue: #18adff;
+      --yellow: #fff200;
+      --red: #ff1c16;
+      --text: #ffffff;
+      --ink: #29262d;
+      --soft: #d9d4cc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px),
+        var(--bg);
+      background-size: 120px 120px;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px clamp(16px, 4vw, 44px);
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      background: rgba(10, 9, 13, .78);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    button {
+      min-height: 40px;
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: #fff;
+      background: #28232f;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    button:hover {
+      background: #35303f;
+    }
+
+    main {
+      width: min(1680px, 100%);
+      margin: 0 auto;
+      padding: 22px clamp(12px, 3vw, 34px) 42px;
+      display: grid;
+      grid-template-columns: minmax(320px, .9fr) minmax(430px, 1.15fr) minmax(320px, .9fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    section {
+      min-width: 0;
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .dark-board {
+      background: #000;
+      border: 2px solid var(--line);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .dark-board th,
+    .dark-board td {
+      border: 2px solid var(--line);
+      height: 72px;
+      padding: 8px 12px;
+      color: #fff;
+      vertical-align: middle;
+    }
+
+    .dark-board th {
+      font-size: clamp(22px, 3.3vw, 48px);
+      line-height: 1.05;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .dark-board .denom {
+      width: 34%;
+      text-align: right;
+      font-size: clamp(24px, 3.5vw, 54px);
+      white-space: nowrap;
+    }
+
+    .dark-board .denom.small-label {
+      font-size: clamp(20px, 2.7vw, 42px);
+      text-align: left;
+    }
+
+    .dark-board .num,
+    .dark-board .money {
+      text-align: right;
+      font-size: clamp(24px, 3.4vw, 52px);
+      font-weight: 800;
+      color: var(--blue);
+      white-space: nowrap;
+    }
+
+    .dark-board .input-cell {
+      padding: 0;
+    }
+
+    .result-section .dark-board .denom {
+      width: auto;
+    }
+
+    .result-section .dark-board .money {
+      font-size: clamp(24px, 3vw, 46px);
+      padding-right: 10px;
+    }
+
+    .result-section .total-row .money {
+      font-size: clamp(25px, 3vw, 48px);
+    }
+
+    .hidden-settings {
+      display: none;
+    }
+
+    input[type="number"],
+    input[type="date"] {
+      width: 100%;
+      height: 100%;
+      min-height: 54px;
+      border: 0;
+      color: var(--orange);
+      background: transparent;
+      font: inherit;
+      font-weight: 800;
+      text-align: right;
+      padding: 8px 12px;
+      outline: none;
+      appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      margin: 0;
+      appearance: none;
+    }
+
+    .dark-board input[type="number"] {
+      font-size: clamp(24px, 3.5vw, 56px);
+    }
+
+    .spacer td {
+      height: 48px;
+      background: rgba(42, 31, 51, .56);
+    }
+
+    .total-row td {
+      height: 82px;
+      font-weight: 900;
+    }
+
+    .total-row .money {
+      color: var(--red);
+    }
+
+    .fund-row .money {
+      color: var(--yellow);
+    }
+
+    .rules {
+      margin-top: 14px;
+      padding: 14px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 8px;
+    }
+
+    .rules h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .rule-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .rule-item {
+      display: grid;
+      grid-template-columns: 1fr 84px;
+      gap: 8px;
+      align-items: center;
+      color: rgba(255,255,255,.84);
+      font-size: 14px;
+    }
+
+    .rule-item input {
+      min-height: 36px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 6px;
+      background: #0d0d10;
+      color: #fff;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+
+    .paper {
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid #c8c1b6;
+      padding: 22px 18px 18px;
+      box-shadow: 0 20px 40px rgba(0,0,0,.22);
+    }
+
+    .paper h2 {
+      margin: 0 0 28px;
+      text-align: center;
+      font-size: clamp(23px, 3vw, 34px);
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .date-row {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      font-size: 24px;
+    }
+
+    .date-row input {
+      min-height: 42px;
+      border-bottom: 2px solid #86807a;
+      color: var(--ink);
+      text-align: left;
+      font-size: 20px;
+    }
+
+    .paper table th,
+    .paper table td {
+      border: 2px solid #242229;
+      height: 58px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,.18);
+      font-size: clamp(18px, 2vw, 27px);
+    }
+
+    .paper table th {
+      text-align: center;
+      font-size: clamp(20px, 2.2vw, 30px);
+      font-weight: 600;
+    }
+
+    .paper .answer {
+      text-align: right;
+      font-weight: 800;
+      color: #111;
+      white-space: nowrap;
+    }
+
+    .paper .fund-answer {
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .paper .subtotal {
+      font-size: clamp(24px, 3vw, 38px);
+      font-weight: 900;
+    }
+
+    @media (max-width: 1180px) {
+      main {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .paper-section {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        position: static;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .dark-board th,
+      .dark-board td {
+        height: 58px;
+        padding: 6px 8px;
+      }
+
+      .rule-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      header,
+      .input-section,
+      .result-section,
+      .rules {
+        display: none;
+      }
+
+      main {
+        display: block;
+        padding: 0;
+      }
+
+      .paper {
+        box-shadow: none;
+        border: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>清點單計算</h1>
+    <div class="actions">
+      <button type="button" id="resetBtn">還原範例</button>
+      <button type="button" id="clearBtn">全部清空</button>
+      <button type="button" id="printBtn">列印檔案 3</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="input-section">
+      <h2 class="section-title">輸入</h2>
+      <div class="dark-board">
+        <table aria-label="清點輸入">
+          <thead>
+            <tr>
+              <th></th>
+              <th>捆/大包</th>
+              <th>小包/張</th>
+            </tr>
+          </thead>
+          <tbody id="inputBody"></tbody>
+        </table>
+      </div>
+
+      <div class="rules hidden-settings" aria-hidden="true">
+        <h3>換算規則</h3>
+        <div class="rule-grid" id="ruleGrid"></div>
+      </div>
+
+    </section>
+
+    <section class="result-section">
+      <h2 class="section-title">算完結果</h2>
+      <div class="dark-board">
+        <table aria-label="計算結果">
+          <colgroup>
+            <col style="width: 28%">
+            <col style="width: 28%">
+            <col style="width: 44%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>面額</th>
+              <th>數量</th>
+              <th>金額</th>
+            </tr>
+          </thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="paper-section">
+      <h2 class="section-title">檔案 3 答案</h2>
+      <div class="paper">
+        <h2>收銀零用金清點單</h2>
+        <div class="date-row">
+          <span>日期：</span>
+          <input type="date" id="sheetDate" aria-label="日期">
+        </div>
+        <table aria-label="收銀零用金清點單答案">
+          <thead>
+            <tr>
+              <th>面額</th>
+              <th>數量</th>
+              <th>金額</th>
+            </tr>
+          </thead>
+          <tbody id="paperBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const inputRows = [
+      { key: "n1000", label: "1,000", denomination: 1000, big: false, small: true, defaultBig: "", defaultSmall: 1 },
+      { key: "n500", label: "500", denomination: 500, big: true, small: true, defaultBig: 3, defaultSmall: 7 },
+      { key: "n100", label: "100", denomination: 100, big: true, small: true, defaultBig: 1, defaultSmall: 96 },
+      { key: "p50", label: "50 (500-)", denomination: 50, big: true, small: true, defaultBig: 7, defaultSmall: 10, smallLabel: true },
+      { key: "p10", label: "10 (500-)", denomination: 10, big: true, small: true, defaultBig: 13, defaultSmall: 3, smallLabel: true },
+      { key: "p5", label: "5 (250-)", denomination: 5, big: true, small: true, defaultBig: 0, defaultSmall: 10, smallLabel: true },
+      { key: "p1", label: "1 (100-)", denomination: 1, big: true, small: true, defaultBig: 3, defaultSmall: 3, smallLabel: true },
+      { spacer: true },
+      { key: "l50", label: "50", denomination: 50, big: false, small: true, defaultBig: "", defaultSmall: 1 },
+      { key: "l10", label: "10", denomination: 10, big: false, small: true, defaultBig: "", defaultSmall: 47 },
+      { key: "l5", label: "5", denomination: 5, big: false, small: true, defaultBig: "", defaultSmall: 24 },
+      { key: "l1", label: "1", denomination: 1, big: false, small: true, defaultBig: "", defaultSmall: 60 },
+      { spacer: true },
+      { key: "mix", label: "6+22 小包", denomination: 0, big: false, small: true, defaultBig: "", defaultSmall: 2, smallLabel: true }
+    ];
+
+    const ruleFields = [
+      { key: "bundle500", label: "500 一捆張數", default: 50 },
+      { key: "bundle100", label: "100 一捆張數", default: 100 },
+      { key: "pack50Count", label: "50 一大包小包數", default: 10 },
+      { key: "small50Count", label: "50 一小包個數", default: 10 },
+      { key: "pack10Count", label: "10 一大包小包數", default: 5 },
+      { key: "small10Count", label: "10 一小包個數", default: 50 },
+      { key: "pack5Count", label: "5 一大包個數", default: 50 },
+      { key: "small5Count", label: "5 一小包個數", default: 50 },
+      { key: "pack1Count", label: "1 一大包小包數", default: 10 },
+      { key: "small1Count", label: "1 一小包個數", default: 100 },
+      { key: "mix500", label: "6+22 的 500 張數", default: 6 },
+      { key: "mix100", label: "6+22 的 100 張數", default: 22 },
+      { key: "fundBags", label: "零用金袋數", default: 6 },
+      { key: "fundPerBag", label: "每袋零用金", default: 10000 }
+    ];
+
+    const money = new Intl.NumberFormat("zh-TW");
+
+    function readNumber(id) {
+      const value = document.getElementById(id)?.value;
+      const number = Number(value);
+      return Number.isFinite(number) && number > 0 ? number : 0;
+    }
+
+    function formatNumber(value) {
+      return value ? money.format(value) : "";
+    }
+
+    function makeNumberInput(id, value, disabled = false) {
+      if (disabled) return "";
+      return `<input id="${id}" type="number" min="0" step="1" inputmode="numeric" value="${value}" aria-label="${id}">`;
+    }
+
+    function renderInputs() {
+      const body = document.getElementById("inputBody");
+      body.innerHTML = inputRows.map((row) => {
+        if (row.spacer) {
+          return `<tr class="spacer"><td></td><td></td><td></td></tr>`;
+        }
+        const labelClass = row.smallLabel ? "denom small-label" : "denom";
+        return `
+          <tr>
+            <td class="${labelClass}">${row.label}</td>
+            <td class="input-cell">${makeNumberInput(`${row.key}Big`, row.defaultBig, !row.big)}</td>
+            <td class="input-cell">${makeNumberInput(`${row.key}Small`, row.defaultSmall, !row.small)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      const grid = document.getElementById("ruleGrid");
+      grid.innerHTML = ruleFields.map((field) => `
+        <label class="rule-item">
+          <span>${field.label}</span>
+          <input id="${field.key}" type="number" min="0" step="1" inputmode="numeric" value="${field.default}">
+        </label>
+      `).join("");
+    }
+
+    function compute() {
+      const rules = Object.fromEntries(ruleFields.map((field) => [field.key, readNumber(field.key)]));
+      const mixCount = readNumber("mixSmall");
+      const rows = {
+        1000: readNumber("n1000Small"),
+        500: readNumber("n500Big") * rules.bundle500 + readNumber("n500Small") + mixCount * rules.mix500,
+        100: readNumber("n100Big") * rules.bundle100 + readNumber("n100Small") + mixCount * rules.mix100,
+        50: readNumber("p50Big") * rules.pack50Count * rules.small50Count + readNumber("p50Small") * rules.small50Count,
+        10: readNumber("p10Big") * rules.pack10Count * rules.small10Count + readNumber("p10Small") * rules.small10Count,
+        5: readNumber("p5Big") * rules.pack5Count + readNumber("p5Small") * rules.small5Count,
+        1: readNumber("p1Big") * rules.pack1Count * rules.small1Count + readNumber("p1Small") * rules.small1Count
+      };
+
+      const loose = {
+        50: readNumber("l50Small"),
+        10: readNumber("l10Small"),
+        5: readNumber("l5Small"),
+        1: readNumber("l1Small")
+      };
+
+      const packedRows = [1000, 500, 100, 50, 10, 5, 1].map((denom) => ({
+        denom,
+        qty: rows[denom],
+        amount: rows[denom] * denom
+      }));
+
+      const looseRows = [50, 10, 5, 1].map((denom) => ({
+        denom,
+        qty: loose[denom],
+        amount: loose[denom] * denom
+      }));
+
+      const packedTotal = packedRows.reduce((sum, row) => sum + row.amount, 0);
+      const looseTotal = looseRows.reduce((sum, row) => sum + row.amount, 0);
+      const fundAmount = rules.fundBags * rules.fundPerBag;
+      const grandTotal = packedTotal + looseTotal + fundAmount;
+
+      return { packedRows, looseRows, looseTotal, fundAmount, fundBags: rules.fundBags, grandTotal };
+    }
+
+    function renderResult() {
+      const data = compute();
+      const resultBody = document.getElementById("resultBody");
+      resultBody.innerHTML = [
+        ...data.packedRows.map((row) => resultRow(row.denom, row.qty, row.amount)),
+        `<tr class="spacer"><td></td><td></td><td></td></tr>`,
+        ...data.looseRows.map((row) => resultRow(row.denom, row.qty, row.amount)),
+        `<tr class="fund-row"><td></td><td></td><td class="money">${formatNumber(data.fundAmount)}</td></tr>`,
+        `<tr class="total-row"><td></td><td></td><td class="money">${formatNumber(data.grandTotal)}</td></tr>`
+      ].join("");
+
+      renderPaper(data);
+    }
+
+    function resultRow(denom, qty, amount) {
+      return `
+        <tr>
+          <td class="denom">${money.format(denom)}</td>
+          <td class="num">${formatNumber(qty)}</td>
+          <td class="money">${formatNumber(amount)}</td>
+        </tr>
+      `;
+    }
+
+    function renderPaper(data) {
+      const byDenom = Object.fromEntries(data.packedRows.map((row) => [row.denom, row]));
+      const paperRows = [
+        { label: "2,000元", qty: "", amount: "" },
+        { label: "1,000元", qty: byDenom[1000]?.qty || "", amount: byDenom[1000]?.amount || "" },
+        { label: "500元", qty: byDenom[500]?.qty || "", amount: byDenom[500]?.amount || "" },
+        { label: "200元", qty: "", amount: "" },
+        { label: "100元", qty: byDenom[100]?.qty || "", amount: byDenom[100]?.amount || "" },
+        { label: "50元", qty: byDenom[50]?.qty || "", amount: byDenom[50]?.amount || "" },
+        { label: "10元", qty: byDenom[10]?.qty || "", amount: byDenom[10]?.amount || "" },
+        { label: "5元", qty: byDenom[5]?.qty || "", amount: byDenom[5]?.amount || "" },
+        { label: "1元", qty: byDenom[1]?.qty || "", amount: byDenom[1]?.amount || "" },
+        { label: "", qty: "", amount: "" },
+        { label: "", qty: "", amount: "" },
+        { label: "零散", qty: "", amount: data.looseTotal },
+        { label: "零用金", qty: `${data.fundBags}袋`, amount: data.fundAmount, fund: true },
+        { label: "小計", qty: "", amount: data.grandTotal, subtotal: true }
+      ];
+
+      document.getElementById("paperBody").innerHTML = paperRows.map((row) => `
+        <tr>
+          <td>${row.label}</td>
+          <td class="${row.fund ? "fund-answer" : "answer"}">${formatQty(row.qty)}</td>
+          <td class="answer ${row.subtotal ? "subtotal" : ""}">${formatNumber(row.amount)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function formatQty(value) {
+      if (value === "" || value === 0) return "";
+      return typeof value === "number" ? money.format(value) : value;
+    }
+
+    function setDefaults(blank = false) {
+      inputRows.forEach((row) => {
+        if (row.spacer) return;
+        const big = document.getElementById(`${row.key}Big`);
+        const small = document.getElementById(`${row.key}Small`);
+        if (big) big.value = blank ? "" : row.defaultBig;
+        if (small) small.value = blank ? "" : row.defaultSmall;
+      });
+      ruleFields.forEach((field) => {
+        const input = document.getElementById(field.key);
+        if (input) input.value = field.default;
+      });
+      renderResult();
+    }
+
+    function setToday() {
+      const date = new Date();
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      document.getElementById("sheetDate").value = `${yyyy}-${mm}-${dd}`;
+    }
+
+    renderInputs();
+    setToday();
+    renderResult();
+
+    document.addEventListener("input", (event) => {
+      if (event.target.matches("input")) renderResult();
+    });
+    document.getElementById("resetBtn").addEventListener("click", () => setDefaults(false));
+    document.getElementById("clearBtn").addEventListener("click", () => setDefaults(true));
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+  </script>
+</body>
+</html>
