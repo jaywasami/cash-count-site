@@ -1,662 +1,158 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>清點單計算</title>
-  <style>
-    :root {
-      --bg: #17151c;
-      --panel: #0b0b0d;
-      --paper: #f4f1ec;
-      --line: #f3f3f3;
-      --muted-line: #4c4658;
-      --orange: #ff7a00;
-      --blue: #18adff;
-      --yellow: #fff200;
-      --red: #ff1c16;
-      --text: #ffffff;
-      --ink: #29262d;
-      --soft: #d9d4cc;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      background:
-        linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px),
-        var(--bg);
-      background-size: 120px 120px;
-      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
-    }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 22px clamp(16px, 4vw, 44px);
-      border-bottom: 1px solid rgba(255,255,255,.12);
-      background: rgba(10, 9, 13, .78);
-      backdrop-filter: blur(12px);
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(24px, 3vw, 38px);
-      font-weight: 800;
-      letter-spacing: 0;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    button {
-      min-height: 40px;
-      border: 1px solid rgba(255,255,255,.22);
-      border-radius: 8px;
-      padding: 8px 14px;
-      color: #fff;
-      background: #28232f;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    button:hover {
-      background: #35303f;
-    }
-
-    main {
-      width: min(1680px, 100%);
-      margin: 0 auto;
-      padding: 22px clamp(12px, 3vw, 34px) 42px;
-      display: grid;
-      grid-template-columns: minmax(320px, .9fr) minmax(430px, 1.15fr) minmax(320px, .9fr);
-      gap: 22px;
-      align-items: start;
-    }
-
-    section {
-      min-width: 0;
-    }
-
-    .section-title {
-      margin: 0 0 10px;
-      font-size: 20px;
-      font-weight: 800;
-    }
-
-    .dark-board {
-      background: #000;
-      border: 2px solid var(--line);
-      overflow: hidden;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-    .dark-board th,
-    .dark-board td {
-      border: 2px solid var(--line);
-      height: 72px;
-      padding: 8px 12px;
-      color: #fff;
-      vertical-align: middle;
-    }
-
-    .dark-board th {
-      font-size: clamp(22px, 3.3vw, 48px);
-      line-height: 1.05;
-      text-align: center;
-      font-weight: 800;
-    }
-
-    .dark-board .denom {
-      width: 34%;
-      text-align: right;
-      font-size: clamp(24px, 3.5vw, 54px);
-      white-space: nowrap;
-    }
-
-    .dark-board .denom.small-label {
-      font-size: clamp(20px, 2.7vw, 42px);
-      text-align: left;
-    }
-
-    .dark-board .num,
-    .dark-board .money {
-      text-align: right;
-      font-size: clamp(24px, 3.4vw, 52px);
-      font-weight: 800;
-      color: var(--blue);
-      white-space: nowrap;
-    }
-
-    .dark-board .input-cell {
-      padding: 0;
-    }
-
-    .result-section .dark-board .denom {
-      width: auto;
-    }
-
-    .result-section .dark-board .money {
-      font-size: clamp(24px, 3vw, 46px);
-      padding-right: 10px;
-    }
-
-    .result-section .total-row .money {
-      font-size: clamp(25px, 3vw, 48px);
-    }
-
-    .hidden-settings {
-      display: none;
-    }
-
-    input[type="number"],
-    input[type="date"] {
-      width: 100%;
-      height: 100%;
-      min-height: 54px;
-      border: 0;
-      color: var(--orange);
-      background: transparent;
-      font: inherit;
-      font-weight: 800;
-      text-align: right;
-      padding: 8px 12px;
-      outline: none;
-      appearance: textfield;
-    }
-
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-      margin: 0;
-      appearance: none;
-    }
-
-    .dark-board input[type="number"] {
-      font-size: clamp(24px, 3.5vw, 56px);
-    }
-
-    .spacer td {
-      height: 48px;
-      background: rgba(42, 31, 51, .56);
-    }
-
-    .total-row td {
-      height: 82px;
-      font-weight: 900;
-    }
-
-    .total-row .money {
-      color: var(--red);
-    }
-
-    .fund-row .money {
-      color: var(--yellow);
-    }
-
-    .rules {
-      margin-top: 14px;
-      padding: 14px;
-      background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 8px;
-    }
-
-    .rules h3 {
-      margin: 0 0 10px;
-      font-size: 16px;
-    }
-
-    .rule-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .rule-item {
-      display: grid;
-      grid-template-columns: 1fr 84px;
-      gap: 8px;
-      align-items: center;
-      color: rgba(255,255,255,.84);
-      font-size: 14px;
-    }
-
-    .rule-item input {
-      min-height: 36px;
-      border: 1px solid rgba(255,255,255,.18);
-      border-radius: 6px;
-      background: #0d0d10;
-      color: #fff;
-      font-size: 18px;
-      padding: 4px 8px;
-    }
-
-    .paper {
-      color: var(--ink);
-      background: var(--paper);
-      border: 1px solid #c8c1b6;
-      padding: 22px 18px 18px;
-      box-shadow: 0 20px 40px rgba(0,0,0,.22);
-    }
-
-    .paper h2 {
-      margin: 0 0 28px;
-      text-align: center;
-      font-size: clamp(23px, 3vw, 34px);
-      font-weight: 500;
-      letter-spacing: 0;
-    }
-
-    .date-row {
-      display: grid;
-      grid-template-columns: 64px 1fr;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
-      font-size: 24px;
-    }
-
-    .date-row input {
-      min-height: 42px;
-      border-bottom: 2px solid #86807a;
-      color: var(--ink);
-      text-align: left;
-      font-size: 20px;
-    }
-
-    .paper table th,
-    .paper table td {
-      border: 2px solid #242229;
-      height: 58px;
-      padding: 8px 10px;
-      background: rgba(255,255,255,.18);
-      font-size: clamp(18px, 2vw, 27px);
-    }
-
-    .paper table th {
-      text-align: center;
-      font-size: clamp(20px, 2.2vw, 30px);
-      font-weight: 600;
-    }
-
-    .paper .answer {
-      text-align: right;
-      font-weight: 800;
-      color: #111;
-      white-space: nowrap;
-    }
-
-    .paper .fund-answer {
-      text-align: center;
-      font-weight: 800;
-    }
-
-    .paper .subtotal {
-      font-size: clamp(24px, 3vw, 38px);
-      font-weight: 900;
-    }
-
-    @media (max-width: 1180px) {
-      main {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .paper-section {
-        grid-column: 1 / -1;
-      }
-    }
-
-    @media (max-width: 760px) {
-      header {
-        position: static;
-        align-items: flex-start;
-        flex-direction: column;
-      }
-
-      main {
-        grid-template-columns: 1fr;
-      }
-
-      .dark-board th,
-      .dark-board td {
-        height: 58px;
-        padding: 6px 8px;
-      }
-
-      .rule-grid {
-        grid-template-columns: 1fr;
-      }
-
-    }
-
-    @media print {
-      body {
-        background: #fff;
-      }
-
-      header,
-      .input-section,
-      .result-section,
-      .rules {
-        display: none;
-      }
-
-      main {
-        display: block;
-        padding: 0;
-      }
-
-      .paper {
-        box-shadow: none;
-        border: 0;
-      }
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>現金清點</title>
+<style>
+:root{
+  --bg:#f5f5f7; --card:#fff; --text:#111114; --muted:#77777d; --line:#e8e8ed;
+  --blue:#0a84ff; --green:#34c759; --red:#ff3b30; --yellow:#ffcc00;
+  --r:18px; --shadow:0 7px 24px rgba(0,0,0,.055);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Noto Sans TC",Arial,sans-serif;color:var(--text);overflow:hidden}
+button,input{font:inherit}
+.app{height:100dvh;min-height:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.top{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+.title{font-size:clamp(22px,5.3vw,30px);font-weight:800;letter-spacing:-.7px}
+.sub{font-size:12px;color:var(--muted);margin-top:-4px}
+.iconBtn{border:0;background:#fff;border-radius:50%;width:36px;height:36px;box-shadow:var(--shadow);font-size:18px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.inputCard{padding:8px 10px 7px;flex:1;min-height:0;display:flex;flex-direction:column}
+.gridHead,.moneyRow{display:grid;grid-template-columns:1.05fr .92fr .92fr;align-items:center;gap:7px}
+.gridHead{font-size:11px;color:var(--muted);padding:3px 2px 5px}
+.moneyRow{min-height:calc((100% - 34px)/7);border-top:1px solid var(--line)}
+.moneyRow:first-of-type{border-top:0}
+.denom{font-weight:750;font-size:clamp(15px,4vw,20px);padding-left:4px}
+.field{width:100%;height:34px;border:1px solid #dedee4;background:#fbfbfc;border-radius:10px;text-align:center;font-weight:700;font-size:17px;outline:none;color:#111}
+.field:focus{border-color:#9ac8ff;box-shadow:0 0 0 3px rgba(10,132,255,.12);background:#fff}
+.field[disabled]{background:transparent;border-color:transparent;color:#aaa}
+.looseCard{padding:8px 10px}
+.sectionTitle{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;margin-bottom:7px}.sectionTitle span:last-child{font-size:11px;color:var(--muted);font-weight:500}
+.looseGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.looseItem{display:grid;grid-template-columns:1fr;gap:4px;text-align:center}.looseItem b{font-size:13px}.looseItem .field{height:32px;font-size:16px}
+.special{display:grid;grid-template-columns:1fr 84px;align-items:center;gap:8px;padding:8px 10px}.specialLabel{font-size:13px;font-weight:800}.special small{color:var(--muted);font-weight:500;display:block;margin-top:1px}
+.summary{padding:8px 11px;display:grid;grid-template-columns:1fr auto;row-gap:3px;align-items:end}.summary .k{color:var(--muted);font-size:12px}.summary .v{font-weight:800;font-size:14px}.summary .grandK{font-weight:800;font-size:14px}.summary .grand{font-size:clamp(22px,6vw,30px);font-weight:850;color:var(--blue);letter-spacing:-.6px}
+.actions{display:grid;grid-template-columns:1fr 1fr 1.55fr;gap:8px}.btn{height:44px;border:0;border-radius:14px;font-weight:800;font-size:14px}.ghost{background:#fff;color:#242428;box-shadow:var(--shadow)}.primary{background:var(--blue);color:#fff;box-shadow:0 8px 20px rgba(10,132,255,.22)}
+/* result */
+#resultPage{display:none}
+.resultCard{flex:1;min-height:0;padding:8px 10px;display:flex;flex-direction:column}
+.resultHead,.resultRow{display:grid;grid-template-columns:1fr 1fr 1.25fr;align-items:center}.resultHead{font-size:11px;color:var(--muted);padding:1px 5px 5px}.resultRow{flex:1;border-top:1px solid var(--line);padding:0 5px;min-height:0}.resultRow .d{font-weight:800}.resultRow .q{text-align:right;font-weight:800}.resultRow .a{text-align:right;font-weight:850;color:#138cf4}
+.blank{color:#c8c8ce!important}
+.resultBottom{padding:8px 10px;display:grid;grid-template-columns:1fr auto;gap:4px;align-items:center}.rbLabel{font-size:12px;color:var(--muted)}.rbVal{font-weight:850}.looseV{color:var(--green)}.subTotal{color:var(--red);font-size:21px}.fixed{color:#ad8a00;font-size:18px}.final{color:var(--red);font-size:27px}
+.resultActions{display:grid;grid-template-columns:1fr 1.25fr;gap:8px}
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.26);display:none;align-items:flex-end;z-index:20}.sheet{width:100%;max-height:78dvh;background:#f7f7f9;border-radius:24px 24px 0 0;padding:12px 14px max(16px,env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.14)}.handle{width:38px;height:5px;background:#d0d0d5;border-radius:99px;margin:0 auto 9px}.sheetTitle{font-weight:850;font-size:21px;margin-bottom:8px}.historyList{max-height:55dvh;overflow:auto}.hist{display:grid;grid-template-columns:1fr auto;gap:6px;background:#fff;border-radius:14px;padding:10px 12px;margin:7px 0;box-shadow:var(--shadow)}.hist .date{font-weight:800;font-size:14px}.hist .sum{font-weight:850;color:var(--blue)}.hist small{color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:28px 8px}.historyActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.closeBtn,.deleteAllBtn{width:100%;height:42px;border:0;border-radius:13px;font-weight:800}.closeBtn{background:#e9e9ed}.deleteAllBtn{background:#fff0ef;color:var(--red)}
+.editBadge{display:none;color:var(--blue);font-size:11px;font-weight:800;background:#e8f3ff;padding:4px 8px;border-radius:99px;margin-left:6px}
+@media (max-height:720px){.app{gap:5px;padding-top:5px}.top{height:36px}.sub{display:none}.inputCard{padding-top:5px}.moneyRow{min-height:calc((100% - 30px)/7)}.field{height:30px}.looseCard{padding:6px 9px}.looseItem .field{height:28px}.special{padding:6px 9px}.summary{padding:6px 10px}.actions .btn{height:38px}.resultBottom{padding:5px 9px}.resultActions .btn{height:38px}}
+</style>
 </head>
 <body>
-  <header>
-    <h1>清點單計算</h1>
-    <div class="actions">
-      <button type="button" id="resetBtn">還原範例</button>
-      <button type="button" id="clearBtn">全部清空</button>
-      <button type="button" id="printBtn">列印檔案 3</button>
-    </div>
-  </header>
+<div class="app" id="inputPage">
+  <div>
+    <div class="top"><div><div class="title">現金清點 <span class="editBadge" id="editBadge">修改歷史紀錄</span></div><div class="sub">輸入後即時計算，送出產生抄寫結果</div></div><button class="iconBtn" id="historyTop" aria-label="歷史紀錄">◷</button></div>
+  </div>
+  <div class="card inputCard">
+    <div class="gridHead"><div>面額</div><div style="text-align:center">綑 / 大包</div><div style="text-align:center">小包 / 張</div></div>
+    <div id="moneyRows"></div>
+  </div>
+  <div class="card looseCard">
+    <div class="sectionTitle"><span>零散</span><span>只計入零散金額</span></div>
+    <div class="looseGrid" id="looseGrid"></div>
+  </div>
+  <div class="card special"><div class="specialLabel">6(500)+22(100)<small>每綑自動加到 500、100 數量</small></div><input class="field" id="special" inputmode="numeric" pattern="[0-9]*" placeholder="" /></div>
+  <div class="card summary">
+    <div class="k">零散金額</div><div class="v" id="looseTotal">$0</div>
+    <div class="grandK">目前總計</div><div class="grand" id="grandTotal">$60,000</div>
+  </div>
+  <div class="actions">
+    <button class="btn ghost" id="clearBtn">清空</button>
+    <button class="btn ghost" id="historyBtn">歷史紀錄</button>
+    <button class="btn primary" id="submitBtn">送出產生結果</button>
+  </div>
+</div>
 
-  <main>
-    <section class="input-section">
-      <h2 class="section-title">輸入</h2>
-      <div class="dark-board">
-        <table aria-label="清點輸入">
-          <thead>
-            <tr>
-              <th></th>
-              <th>捆/大包</th>
-              <th>小包/張</th>
-            </tr>
-          </thead>
-          <tbody id="inputBody"></tbody>
-        </table>
-      </div>
+<div class="app" id="resultPage">
+  <div class="top"><button class="iconBtn" id="backBtn">‹</button><div style="text-align:center"><div class="title" style="font-size:24px">收銀零用金清點單</div><div class="sub" id="resultTime"></div></div><div style="width:36px"></div></div>
+  <div class="card resultCard"><div class="resultHead"><div>面額</div><div style="text-align:right">數量</div><div style="text-align:right">金額</div></div><div id="resultRows" style="display:flex;flex-direction:column;flex:1;min-height:0"></div></div>
+  <div class="card resultBottom">
+    <div class="rbLabel">零散</div><div class="rbVal looseV" id="rLoose">$0</div>
+    <div class="rbLabel">清點小計</div><div class="rbVal subTotal" id="rSubtotal">$0</div>
+    <div class="rbLabel">固定金額</div><div class="rbVal fixed">$60,000</div>
+    <div class="rbLabel" style="font-weight:850;color:#111">最終總計</div><div class="rbVal final" id="rFinal">$0</div>
+  </div>
+  <div class="resultActions"><button class="btn ghost" id="editBtn">回到編輯</button><button class="btn primary" id="newBtn">完成・新增一筆</button></div>
+</div>
 
-      <div class="rules hidden-settings" aria-hidden="true">
-        <h3>換算規則</h3>
-        <div class="rule-grid" id="ruleGrid"></div>
-      </div>
-
-    </section>
-
-    <section class="result-section">
-      <h2 class="section-title">算完結果</h2>
-      <div class="dark-board">
-        <table aria-label="計算結果">
-          <colgroup>
-            <col style="width: 28%">
-            <col style="width: 28%">
-            <col style="width: 44%">
-          </colgroup>
-          <thead>
-            <tr>
-              <th>面額</th>
-              <th>數量</th>
-              <th>金額</th>
-            </tr>
-          </thead>
-          <tbody id="resultBody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="paper-section">
-      <h2 class="section-title">檔案 3 答案</h2>
-      <div class="paper">
-        <h2>收銀零用金清點單</h2>
-        <div class="date-row">
-          <span>日期：</span>
-          <input type="date" id="sheetDate" aria-label="日期">
-        </div>
-        <table aria-label="收銀零用金清點單答案">
-          <thead>
-            <tr>
-              <th>面額</th>
-              <th>數量</th>
-              <th>金額</th>
-            </tr>
-          </thead>
-          <tbody id="paperBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    const inputRows = [
-      { key: "n1000", label: "1,000", denomination: 1000, big: false, small: true, defaultBig: "", defaultSmall: 1 },
-      { key: "n500", label: "500", denomination: 500, big: true, small: true, defaultBig: 3, defaultSmall: 7 },
-      { key: "n100", label: "100", denomination: 100, big: true, small: true, defaultBig: 1, defaultSmall: 96 },
-      { key: "p50", label: "50 (500-)", denomination: 50, big: true, small: true, defaultBig: 7, defaultSmall: 10, smallLabel: true },
-      { key: "p10", label: "10 (500-)", denomination: 10, big: true, small: true, defaultBig: 13, defaultSmall: 3, smallLabel: true },
-      { key: "p5", label: "5 (250-)", denomination: 5, big: true, small: true, defaultBig: 0, defaultSmall: 10, smallLabel: true },
-      { key: "p1", label: "1 (100-)", denomination: 1, big: true, small: true, defaultBig: 3, defaultSmall: 3, smallLabel: true },
-      { spacer: true },
-      { key: "l50", label: "50", denomination: 50, big: false, small: true, defaultBig: "", defaultSmall: 1 },
-      { key: "l10", label: "10", denomination: 10, big: false, small: true, defaultBig: "", defaultSmall: 47 },
-      { key: "l5", label: "5", denomination: 5, big: false, small: true, defaultBig: "", defaultSmall: 24 },
-      { key: "l1", label: "1", denomination: 1, big: false, small: true, defaultBig: "", defaultSmall: 60 },
-      { spacer: true },
-      { key: "mix", label: "6+22 小包", denomination: 0, big: false, small: true, defaultBig: "", defaultSmall: 2, smallLabel: true }
-    ];
-
-    const ruleFields = [
-      { key: "bundle500", label: "500 一捆張數", default: 50 },
-      { key: "bundle100", label: "100 一捆張數", default: 100 },
-      { key: "pack50Count", label: "50 一大包小包數", default: 10 },
-      { key: "small50Count", label: "50 一小包個數", default: 10 },
-      { key: "pack10Count", label: "10 一大包小包數", default: 5 },
-      { key: "small10Count", label: "10 一小包個數", default: 50 },
-      { key: "pack5Count", label: "5 一大包個數", default: 50 },
-      { key: "small5Count", label: "5 一小包個數", default: 50 },
-      { key: "pack1Count", label: "1 一大包小包數", default: 10 },
-      { key: "small1Count", label: "1 一小包個數", default: 100 },
-      { key: "mix500", label: "6+22 的 500 張數", default: 6 },
-      { key: "mix100", label: "6+22 的 100 張數", default: 22 },
-      { key: "fundBags", label: "零用金袋數", default: 6 },
-      { key: "fundPerBag", label: "每袋零用金", default: 10000 }
-    ];
-
-    const money = new Intl.NumberFormat("zh-TW");
-
-    function readNumber(id) {
-      const value = document.getElementById(id)?.value;
-      const number = Number(value);
-      return Number.isFinite(number) && number > 0 ? number : 0;
-    }
-
-    function formatNumber(value) {
-      return value ? money.format(value) : "";
-    }
-
-    function makeNumberInput(id, value, disabled = false) {
-      if (disabled) return "";
-      return `<input id="${id}" type="number" min="0" step="1" inputmode="numeric" value="${value}" aria-label="${id}">`;
-    }
-
-    function renderInputs() {
-      const body = document.getElementById("inputBody");
-      body.innerHTML = inputRows.map((row) => {
-        if (row.spacer) {
-          return `<tr class="spacer"><td></td><td></td><td></td></tr>`;
-        }
-        const labelClass = row.smallLabel ? "denom small-label" : "denom";
-        return `
-          <tr>
-            <td class="${labelClass}">${row.label}</td>
-            <td class="input-cell">${makeNumberInput(`${row.key}Big`, row.defaultBig, !row.big)}</td>
-            <td class="input-cell">${makeNumberInput(`${row.key}Small`, row.defaultSmall, !row.small)}</td>
-          </tr>
-        `;
-      }).join("");
-
-      const grid = document.getElementById("ruleGrid");
-      grid.innerHTML = ruleFields.map((field) => `
-        <label class="rule-item">
-          <span>${field.label}</span>
-          <input id="${field.key}" type="number" min="0" step="1" inputmode="numeric" value="${field.default}">
-        </label>
-      `).join("");
-    }
-
-    function compute() {
-      const rules = Object.fromEntries(ruleFields.map((field) => [field.key, readNumber(field.key)]));
-      const mixCount = readNumber("mixSmall");
-      const rows = {
-        1000: readNumber("n1000Small"),
-        500: readNumber("n500Big") * rules.bundle500 + readNumber("n500Small") + mixCount * rules.mix500,
-        100: readNumber("n100Big") * rules.bundle100 + readNumber("n100Small") + mixCount * rules.mix100,
-        50: readNumber("p50Big") * rules.pack50Count * rules.small50Count + readNumber("p50Small") * rules.small50Count,
-        10: readNumber("p10Big") * rules.pack10Count * rules.small10Count + readNumber("p10Small") * rules.small10Count,
-        5: readNumber("p5Big") * rules.pack5Count + readNumber("p5Small") * rules.small5Count,
-        1: readNumber("p1Big") * rules.pack1Count * rules.small1Count + readNumber("p1Small") * rules.small1Count
-      };
-
-      const loose = {
-        50: readNumber("l50Small"),
-        10: readNumber("l10Small"),
-        5: readNumber("l5Small"),
-        1: readNumber("l1Small")
-      };
-
-      const packedRows = [1000, 500, 100, 50, 10, 5, 1].map((denom) => ({
-        denom,
-        qty: rows[denom],
-        amount: rows[denom] * denom
-      }));
-
-      const looseRows = [50, 10, 5, 1].map((denom) => ({
-        denom,
-        qty: loose[denom],
-        amount: loose[denom] * denom
-      }));
-
-      const packedTotal = packedRows.reduce((sum, row) => sum + row.amount, 0);
-      const looseTotal = looseRows.reduce((sum, row) => sum + row.amount, 0);
-      const fundAmount = rules.fundBags * rules.fundPerBag;
-      const grandTotal = packedTotal + looseTotal + fundAmount;
-
-      return { packedRows, looseRows, looseTotal, fundAmount, fundBags: rules.fundBags, grandTotal };
-    }
-
-    function renderResult() {
-      const data = compute();
-      const resultBody = document.getElementById("resultBody");
-      resultBody.innerHTML = [
-        ...data.packedRows.map((row) => resultRow(row.denom, row.qty, row.amount)),
-        `<tr class="spacer"><td></td><td></td><td></td></tr>`,
-        ...data.looseRows.map((row) => resultRow(row.denom, row.qty, row.amount)),
-        `<tr class="fund-row"><td></td><td></td><td class="money">${formatNumber(data.fundAmount)}</td></tr>`,
-        `<tr class="total-row"><td></td><td></td><td class="money">${formatNumber(data.grandTotal)}</td></tr>`
-      ].join("");
-
-      renderPaper(data);
-    }
-
-    function resultRow(denom, qty, amount) {
-      return `
-        <tr>
-          <td class="denom">${money.format(denom)}</td>
-          <td class="num">${formatNumber(qty)}</td>
-          <td class="money">${formatNumber(amount)}</td>
-        </tr>
-      `;
-    }
-
-    function renderPaper(data) {
-      const byDenom = Object.fromEntries(data.packedRows.map((row) => [row.denom, row]));
-      const paperRows = [
-        { label: "2,000元", qty: "", amount: "" },
-        { label: "1,000元", qty: byDenom[1000]?.qty || "", amount: byDenom[1000]?.amount || "" },
-        { label: "500元", qty: byDenom[500]?.qty || "", amount: byDenom[500]?.amount || "" },
-        { label: "200元", qty: "", amount: "" },
-        { label: "100元", qty: byDenom[100]?.qty || "", amount: byDenom[100]?.amount || "" },
-        { label: "50元", qty: byDenom[50]?.qty || "", amount: byDenom[50]?.amount || "" },
-        { label: "10元", qty: byDenom[10]?.qty || "", amount: byDenom[10]?.amount || "" },
-        { label: "5元", qty: byDenom[5]?.qty || "", amount: byDenom[5]?.amount || "" },
-        { label: "1元", qty: byDenom[1]?.qty || "", amount: byDenom[1]?.amount || "" },
-        { label: "", qty: "", amount: "" },
-        { label: "", qty: "", amount: "" },
-        { label: "零散", qty: "", amount: data.looseTotal },
-        { label: "零用金", qty: `${data.fundBags}袋`, amount: data.fundAmount, fund: true },
-        { label: "小計", qty: "", amount: data.grandTotal, subtotal: true }
-      ];
-
-      document.getElementById("paperBody").innerHTML = paperRows.map((row) => `
-        <tr>
-          <td>${row.label}</td>
-          <td class="${row.fund ? "fund-answer" : "answer"}">${formatQty(row.qty)}</td>
-          <td class="answer ${row.subtotal ? "subtotal" : ""}">${formatNumber(row.amount)}</td>
-        </tr>
-      `).join("");
-    }
-
-    function formatQty(value) {
-      if (value === "" || value === 0) return "";
-      return typeof value === "number" ? money.format(value) : value;
-    }
-
-    function setDefaults(blank = false) {
-      inputRows.forEach((row) => {
-        if (row.spacer) return;
-        const big = document.getElementById(`${row.key}Big`);
-        const small = document.getElementById(`${row.key}Small`);
-        if (big) big.value = blank ? "" : row.defaultBig;
-        if (small) small.value = blank ? "" : row.defaultSmall;
-      });
-      ruleFields.forEach((field) => {
-        const input = document.getElementById(field.key);
-        if (input) input.value = field.default;
-      });
-      renderResult();
-    }
-
-    function setToday() {
-      const date = new Date();
-      const yyyy = date.getFullYear();
-      const mm = String(date.getMonth() + 1).padStart(2, "0");
-      const dd = String(date.getDate()).padStart(2, "0");
-      document.getElementById("sheetDate").value = `${yyyy}-${mm}-${dd}`;
-    }
-
-    renderInputs();
-    setToday();
-    renderResult();
-
-    document.addEventListener("input", (event) => {
-      if (event.target.matches("input")) renderResult();
-    });
-    document.getElementById("resetBtn").addEventListener("click", () => setDefaults(false));
-    document.getElementById("clearBtn").addEventListener("click", () => setDefaults(true));
-    document.getElementById("printBtn").addEventListener("click", () => window.print());
-  </script>
+<div class="overlay" id="historyOverlay"><div class="sheet"><div class="handle"></div><div class="sheetTitle">歷史紀錄</div><div class="historyList" id="historyList"></div><div class="historyActions"><button class="deleteAllBtn" id="deleteAllHistory">刪除所有紀錄</button><button class="closeBtn" id="closeHistory">關閉</button></div></div></div>
+<script>
+const FIXED_AMOUNT = 60000;
+// 規則：500元1綑50張、100元1綑100張；50元1大包10小包/1小包10個；
+// 10元1大包5小包/1小包50個；5元1小包50個（測試版先以1大包10小包計）；1元1大包10小包/1小包100個。
+const defs = [
+  {d:1000, big:null, small:1, bigLabel:'—', smallLabel:'張'},
+  {d:500, big:50, small:1, bigLabel:'綑', smallLabel:'張'},
+  {d:100, big:100, small:1, bigLabel:'綑', smallLabel:'張'},
+  {d:50, big:100, small:10, bigLabel:'大包', smallLabel:'小包'},
+  {d:10, big:250, small:50, bigLabel:'大包', smallLabel:'小包'},
+  {d:5, big:500, small:50, bigLabel:'大包', smallLabel:'小包'},
+  {d:1, big:1000, small:100, bigLabel:'大包', smallLabel:'小包'}
+];
+const looseDefs=[50,10,5,1];
+const moneyRows=document.getElementById('moneyRows');
+const looseGrid=document.getElementById('looseGrid');
+let editingId=null,lastResult=null;
+function fmt(n){return '$'+Math.round(n).toLocaleString('en-US')}
+function intVal(el){const v=parseInt(el.value,10);return Number.isFinite(v)&&v>0?v:0}
+function makeInput(id, disabled=false){return `<input class="field countInput" id="${id}" inputmode="numeric" pattern="[0-9]*" autocomplete="off" ${disabled?'disabled':''}>`}
+defs.forEach(x=>{
+ const row=document.createElement('div'); row.className='moneyRow';
+ row.innerHTML=`<div class="denom">${x.d.toLocaleString()}</div><div>${makeInput('big_'+x.d,x.big===null)}</div><div>${makeInput('small_'+x.d)}</div>`;
+ moneyRows.appendChild(row);
+});
+looseDefs.forEach(d=>{const e=document.createElement('div');e.className='looseItem';e.innerHTML=`<b>${d}</b>${makeInput('loose_'+d)}`;looseGrid.appendChild(e)});
+function currentInputs(){
+ const data={big:{},small:{},loose:{},special:intVal(document.getElementById('special'))};
+ defs.forEach(x=>{data.big[x.d]=x.big===null?0:intVal(document.getElementById('big_'+x.d));data.small[x.d]=intVal(document.getElementById('small_'+x.d));});
+ looseDefs.forEach(d=>data.loose[d]=intVal(document.getElementById('loose_'+d)));
+ return data;
+}
+function calculate(data=currentInputs()){
+ const qty={}, amounts={};
+ defs.forEach(x=>{qty[x.d]=(x.big===null?0:data.big[x.d]*x.big)+data.small[x.d]*x.small;});
+ qty[500]+=data.special*6; qty[100]+=data.special*22;
+ defs.forEach(x=>amounts[x.d]=qty[x.d]*x.d);
+ const main=Object.values(amounts).reduce((a,b)=>a+b,0);
+ const loose=looseDefs.reduce((s,d)=>s+(data.loose[d]||0)*d,0);
+ const subtotal=main+loose; const final=subtotal+FIXED_AMOUNT;
+ return {qty,amounts,main,loose,subtotal,final};
+}
+function recalc(){const c=calculate();document.getElementById('looseTotal').textContent=fmt(c.loose);document.getElementById('grandTotal').textContent=fmt(c.final)}
+document.addEventListener('input',e=>{if(e.target.matches('.countInput,#special')){e.target.value=e.target.value.replace(/\D/g,'');recalc();}});
+function clearInputs(){document.querySelectorAll('.countInput,#special').forEach(x=>x.value='');editingId=null;document.getElementById('editBadge').style.display='none';recalc()}
+function loadInputs(data){
+ defs.forEach(x=>{if(x.big!==null)document.getElementById('big_'+x.d).value=data.big?.[x.d]||'';document.getElementById('small_'+x.d).value=data.small?.[x.d]||''});
+ looseDefs.forEach(d=>document.getElementById('loose_'+d).value=data.loose?.[d]||'');document.getElementById('special').value=data.special||'';recalc();
+}
+function getHistory(){try{return JSON.parse(localStorage.getItem('cash_history')||'[]')}catch{return[]}}
+function saveHistory(record){const h=getHistory();if(editingId){const i=h.findIndex(x=>x.id===editingId);if(i>=0)h[i]=record;else h.unshift(record)}else h.unshift(record);localStorage.setItem('cash_history',JSON.stringify(h.slice(0,100)))}
+function renderResult(record){
+ lastResult=record;const c=record.calc;const order=[2000,1000,500,200,100,50,10,5,1];
+ document.getElementById('resultRows').innerHTML=order.map(d=>{const q=c.qty[d]||0,a=(c.amounts[d]||0);return `<div class="resultRow"><div class="d">${d.toLocaleString()}</div><div class="q ${q?'':'blank'}">${q||''}</div><div class="a ${a?'':'blank'}">${a?a.toLocaleString('en-US'):''}</div></div>`}).join('');
+ document.getElementById('rLoose').textContent=fmt(c.loose);document.getElementById('rSubtotal').textContent=fmt(c.subtotal);document.getElementById('rFinal').textContent=fmt(c.final);document.getElementById('resultTime').textContent=new Date(record.updatedAt).toLocaleString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+ document.getElementById('inputPage').style.display='none';document.getElementById('resultPage').style.display='flex';
+}
+function submit(){const data=currentInputs(),calc=calculate(data),now=Date.now();const rec={id:editingId||('r'+now),createdAt:editingId?(getHistory().find(x=>x.id===editingId)?.createdAt||now):now,updatedAt:now,data,calc};saveHistory(rec);editingId=rec.id;document.getElementById('editBadge').style.display='inline-block';renderResult(rec)}
+function showInput(){document.getElementById('resultPage').style.display='none';document.getElementById('inputPage').style.display='flex'}
+function showHistory(){const h=getHistory();const list=document.getElementById('historyList');list.innerHTML=h.length?h.map(r=>`<div class="hist" data-id="${r.id}"><div><div class="date">${new Date(r.updatedAt).toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}</div><small>點一下叫回原始輸入值修改</small></div><div class="sum">${fmt(r.calc.final)}</div></div>`).join(''):'<div class="empty">目前還沒有歷史紀錄</div>';document.getElementById('historyOverlay').style.display='flex'}
+document.getElementById('clearBtn').onclick=clearInputs;document.getElementById('submitBtn').onclick=submit;document.getElementById('historyBtn').onclick=showHistory;document.getElementById('historyTop').onclick=showHistory;document.getElementById('closeHistory').onclick=()=>document.getElementById('historyOverlay').style.display='none';
+document.getElementById('deleteAllHistory').onclick=()=>{const h=getHistory();if(!h.length){alert('目前沒有歷史紀錄');return;}if(!confirm('確定要刪除所有歷史紀錄嗎？\n刪除後無法復原。'))return;localStorage.removeItem('cash_history');editingId=null;document.getElementById('editBadge').style.display='none';showHistory();};
+document.getElementById('historyOverlay').onclick=e=>{if(e.target.id==='historyOverlay')e.currentTarget.style.display='none'};
+document.getElementById('historyList').onclick=e=>{const item=e.target.closest('.hist');if(!item)return;const r=getHistory().find(x=>x.id===item.dataset.id);if(!r)return;editingId=r.id;loadInputs(r.data);document.getElementById('editBadge').style.display='inline-block';document.getElementById('historyOverlay').style.display='none';showInput()};
+document.getElementById('backBtn').onclick=showInput;document.getElementById('editBtn').onclick=showInput;document.getElementById('newBtn').onclick=()=>{clearInputs();showInput()};
+// 每次 App 新開啟保持空白；歷史紀錄只在使用者主動選取時載入。
+clearInputs();
+</script>
 </body>
 </html>
