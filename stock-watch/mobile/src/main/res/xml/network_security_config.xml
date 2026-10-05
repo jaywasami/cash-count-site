@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 少數裝置不認得證交所憑證時,允許改用一般連線 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">mis.twse.com.tw</domain>
+    </domain-config>
+</network-security-config>
