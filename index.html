@@ -13,27 +13,29 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang TC","Noto Sans TC",Arial,sans-serif;color:var(--text);overflow:hidden}
 button,input{font:inherit}
-.app{height:100dvh;min-height:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.app{height:100dvh;min-height:100%;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+#inputPage>*{flex-shrink:0}
+#moneyRows{display:flex;flex-direction:column;flex:1 0 auto}
 .top{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 2px}
 .title{font-size:clamp(22px,5.3vw,30px);font-weight:800;letter-spacing:-.7px}
 .sub{font-size:12px;color:var(--muted);margin-top:-4px}
 .iconBtn{border:0;background:#fff;border-radius:50%;width:36px;height:36px;box-shadow:var(--shadow);font-size:18px}
 .card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
-.inputCard{padding:8px 10px 7px;flex:1;min-height:0;display:flex;flex-direction:column}
+.inputCard{padding:8px 10px 7px;flex:1 0 auto;display:flex;flex-direction:column}
 .gridHead,.moneyRow{display:grid;grid-template-columns:1.05fr .92fr .92fr;align-items:center;gap:7px}
 .gridHead{font-size:11px;color:var(--muted);padding:3px 2px 5px}
-.moneyRow{min-height:calc((100% - 34px)/7);border-top:1px solid var(--line)}
+.moneyRow{flex:1 0 38px;min-height:38px;border-top:1px solid var(--line)}
 .moneyRow:first-of-type{border-top:0}
 .denom{font-weight:750;font-size:clamp(15px,4vw,20px);padding-left:4px}
 .field{width:100%;height:34px;border:1px solid #dedee4;background:#fbfbfc;border-radius:10px;text-align:center;font-weight:700;font-size:17px;outline:none;color:#111}
 .field:focus{border-color:#9ac8ff;box-shadow:0 0 0 3px rgba(10,132,255,.12);background:#fff}
 .field[disabled]{background:transparent;border-color:transparent;color:#aaa}
-.looseCard{padding:8px 10px}
+.looseCard{padding:7px 10px}.bankCard{padding:7px 10px}.bankGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.bankItem{display:grid;grid-template-columns:1fr;gap:4px;text-align:center}.bankItem b{font-size:13px}.bankItem small{font-size:10px;color:var(--muted);white-space:nowrap}.bankItem .field{height:32px;font-size:16px}
 .sectionTitle{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;margin-bottom:7px}.sectionTitle span:last-child{font-size:11px;color:var(--muted);font-weight:500}
 .looseGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
 .looseItem{display:grid;grid-template-columns:1fr;gap:4px;text-align:center}.looseItem b{font-size:13px}.looseItem .field{height:32px;font-size:16px}
 .special{display:grid;grid-template-columns:1fr 84px;align-items:center;gap:8px;padding:8px 10px}.specialLabel{font-size:13px;font-weight:800}.special small{color:var(--muted);font-weight:500;display:block;margin-top:1px}
-.summary{padding:8px 11px;display:grid;grid-template-columns:1fr auto;row-gap:3px;align-items:end}.summary .k{color:var(--muted);font-size:12px}.summary .v{font-weight:800;font-size:14px}.summary .grandK{font-weight:800;font-size:14px}.summary .grand{font-size:clamp(22px,6vw,30px);font-weight:850;color:var(--blue);letter-spacing:-.6px}
+.summary{padding:8px 11px;display:grid;grid-template-columns:1fr auto;row-gap:3px;align-items:end}.summary .k{color:var(--muted);font-size:12px}.summary .v{font-weight:800;font-size:14px}.summary .grandK{font-weight:800;font-size:14px}.summary .grand{font-size:clamp(22px,6vw,30px);font-weight:850;color:var(--blue);letter-spacing:-.6px}.versionText{font-size:10px;color:var(--muted);margin-top:2px}
 .actions{display:grid;grid-template-columns:1fr 1fr 1.55fr;gap:8px}.btn{height:44px;border:0;border-radius:14px;font-weight:800;font-size:14px}.ghost{background:#fff;color:#242428;box-shadow:var(--shadow)}.primary{background:var(--blue);color:#fff;box-shadow:0 8px 20px rgba(10,132,255,.22)}
 /* result */
 #resultPage{display:none}
@@ -44,14 +46,15 @@ button,input{font:inherit}
 .resultActions{display:grid;grid-template-columns:1fr 1.25fr;gap:8px}
 /* overlay */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.26);display:none;align-items:flex-end;z-index:20}.sheet{width:100%;max-height:78dvh;background:#f7f7f9;border-radius:24px 24px 0 0;padding:12px 14px max(16px,env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.14)}.handle{width:38px;height:5px;background:#d0d0d5;border-radius:99px;margin:0 auto 9px}.sheetTitle{font-weight:850;font-size:21px;margin-bottom:8px}.historyList{max-height:55dvh;overflow:auto}.hist{display:grid;grid-template-columns:1fr auto;gap:6px;background:#fff;border-radius:14px;padding:10px 12px;margin:7px 0;box-shadow:var(--shadow)}.hist .date{font-weight:800;font-size:14px}.hist .sum{font-weight:850;color:var(--blue)}.hist small{color:var(--muted)}.empty{text-align:center;color:var(--muted);padding:28px 8px}.historyActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.closeBtn,.deleteAllBtn{width:100%;height:42px;border:0;border-radius:13px;font-weight:800}.closeBtn{background:#e9e9ed}.deleteAllBtn{background:#fff0ef;color:var(--red)}
+.confirmOverlay{position:fixed;inset:0;background:rgba(0,0,0,.34);display:none;align-items:center;justify-content:center;padding:24px;z-index:30}.confirmBox{width:100%;max-width:340px;background:#fff;border-radius:20px;padding:20px 18px 14px;box-shadow:0 12px 40px rgba(0,0,0,.2)}.confirmTitle{font-size:18px;font-weight:850;margin-bottom:8px}.confirmText{font-size:14px;line-height:1.55;color:var(--muted);white-space:pre-line}.confirmActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.confirmActions button{height:42px;border:0;border-radius:13px;font-weight:800}.confirmCancel{background:#e9e9ed}.confirmOK{background:var(--red);color:#fff}
 .editBadge{display:none;color:var(--blue);font-size:11px;font-weight:800;background:#e8f3ff;padding:4px 8px;border-radius:99px;margin-left:6px}
-@media (max-height:720px){.app{gap:5px;padding-top:5px}.top{height:36px}.sub{display:none}.inputCard{padding-top:5px}.moneyRow{min-height:calc((100% - 30px)/7)}.field{height:30px}.looseCard{padding:6px 9px}.looseItem .field{height:28px}.special{padding:6px 9px}.summary{padding:6px 10px}.actions .btn{height:38px}.resultBottom{padding:5px 9px}.resultActions .btn{height:38px}}
+@media (max-height:720px){.app{gap:5px;padding-top:5px}.top{height:36px}.sub{display:none}.inputCard{padding-top:5px}.moneyRow{flex-basis:34px;min-height:34px}.field{height:30px}.looseCard{padding:6px 9px}.looseItem .field{height:28px}.special{padding:6px 9px}.summary{padding:6px 10px}.actions .btn{height:38px}.resultBottom{padding:5px 9px}.resultActions .btn{height:38px}}
 </style>
 </head>
 <body>
 <div class="app" id="inputPage">
   <div>
-    <div class="top"><div><div class="title">現金清點 <span class="editBadge" id="editBadge">修改歷史紀錄</span></div><div class="sub">輸入後即時計算，送出產生抄寫結果</div></div><button class="iconBtn" id="historyTop" aria-label="歷史紀錄">◷</button></div>
+    <div class="top"><div><div class="title">現金清點 <span class="editBadge" id="editBadge">修改歷史紀錄</span></div><div class="sub">輸入後即時計算，送出產生抄寫結果</div><div class="versionText">版本 2026.10.08</div></div><button class="iconBtn" id="historyTop" aria-label="歷史紀錄">◷</button></div>
   </div>
   <div class="card inputCard">
     <div class="gridHead"><div>面額</div><div style="text-align:center">綑 / 大包</div><div style="text-align:center">小包 / 張</div></div>
@@ -62,8 +65,10 @@ button,input{font:inherit}
     <div class="looseGrid" id="looseGrid"></div>
   </div>
   <div class="card special"><div class="specialLabel">6(500)+22(100)<small>每綑自動加到 500、100 數量</small></div><input class="field" id="special" inputmode="numeric" pattern="[0-9]*" placeholder="" /></div>
+  <div class="card bankCard"><div class="sectionTitle"><span>銀行換回零錢</span><span>輸入包數，併入上方面額</span></div><div class="bankGrid" id="bankGrid"></div></div>
   <div class="card summary">
     <div class="k">零散金額</div><div class="v" id="looseTotal">$0</div>
+    <div class="k">清點小計</div><div class="v" id="subTotal" style="color:var(--red)">$0</div>
     <div class="grandK">目前總計</div><div class="grand" id="grandTotal">$60,000</div>
   </div>
   <div class="actions">
@@ -71,6 +76,7 @@ button,input{font:inherit}
     <button class="btn ghost" id="historyBtn">歷史紀錄</button>
     <button class="btn primary" id="submitBtn">送出產生結果</button>
   </div>
+  <div id="kbSpacer" style="height:0"></div>
 </div>
 
 <div class="app" id="resultPage">
@@ -86,6 +92,7 @@ button,input{font:inherit}
 </div>
 
 <div class="overlay" id="historyOverlay"><div class="sheet"><div class="handle"></div><div class="sheetTitle">歷史紀錄</div><div class="historyList" id="historyList"></div><div class="historyActions"><button class="deleteAllBtn" id="deleteAllHistory">刪除所有紀錄</button><button class="closeBtn" id="closeHistory">關閉</button></div></div></div>
+<div class="confirmOverlay" id="deleteConfirmOverlay"><div class="confirmBox" role="dialog" aria-modal="true"><div class="confirmTitle">刪除所有紀錄</div><div class="confirmText">確定要刪除所有歷史紀錄嗎？\n刪除後無法復原。</div><div class="confirmActions"><button class="confirmCancel" id="cancelDelete">取消</button><button class="confirmOK" id="confirmDelete">確認刪除</button></div></div></div>
 <script>
 const FIXED_AMOUNT = 60000;
 // 規則：500元1綑50張、100元1綑100張；50元1大包10小包/1小包10個；
@@ -100,8 +107,10 @@ const defs = [
   {d:1, big:1000, small:100, bigLabel:'大包', smallLabel:'小包'}
 ];
 const looseDefs=[50,10,5,1];
+const bankDefs=[{d:50,qty:40,amount:2000},{d:10,qty:200,amount:2000},{d:5,qty:400,amount:2000},{d:1,qty:500,amount:500}];
 const moneyRows=document.getElementById('moneyRows');
 const looseGrid=document.getElementById('looseGrid');
+const bankGrid=document.getElementById('bankGrid');
 let editingId=null,lastResult=null;
 function fmt(n){return '$'+Math.round(n).toLocaleString('en-US')}
 function intVal(el){const v=parseInt(el.value,10);return Number.isFinite(v)&&v>0?v:0}
@@ -112,28 +121,35 @@ defs.forEach(x=>{
  moneyRows.appendChild(row);
 });
 looseDefs.forEach(d=>{const e=document.createElement('div');e.className='looseItem';e.innerHTML=`<b>${d}</b>${makeInput('loose_'+d)}`;looseGrid.appendChild(e)});
+bankDefs.forEach(x=>{const e=document.createElement('div');e.className='bankItem';e.innerHTML=`<b>${x.d} 元</b><small>${x.qty.toLocaleString()}個 / ${x.amount.toLocaleString()}元</small><input class="field bankInput" id="bank_${x.d}" inputmode="numeric" pattern="[0-9]*" autocomplete="off" value="0">`;bankGrid.appendChild(e)});
 function currentInputs(){
- const data={big:{},small:{},loose:{},special:intVal(document.getElementById('special'))};
+ const data={big:{},small:{},loose:{},bank:{},special:intVal(document.getElementById('special'))};
  defs.forEach(x=>{data.big[x.d]=x.big===null?0:intVal(document.getElementById('big_'+x.d));data.small[x.d]=intVal(document.getElementById('small_'+x.d));});
  looseDefs.forEach(d=>data.loose[d]=intVal(document.getElementById('loose_'+d)));
+ bankDefs.forEach(x=>data.bank[x.d]=intVal(document.getElementById('bank_'+x.d)));
  return data;
 }
 function calculate(data=currentInputs()){
  const qty={}, amounts={};
  defs.forEach(x=>{qty[x.d]=(x.big===null?0:data.big[x.d]*x.big)+data.small[x.d]*x.small;});
  qty[500]+=data.special*6; qty[100]+=data.special*22;
+ bankDefs.forEach(x=>{qty[x.d]+=(data.bank?.[x.d]||0)*x.qty;});
  defs.forEach(x=>amounts[x.d]=qty[x.d]*x.d);
  const main=Object.values(amounts).reduce((a,b)=>a+b,0);
  const loose=looseDefs.reduce((s,d)=>s+(data.loose[d]||0)*d,0);
  const subtotal=main+loose; const final=subtotal+FIXED_AMOUNT;
  return {qty,amounts,main,loose,subtotal,final};
 }
-function recalc(){const c=calculate();document.getElementById('looseTotal').textContent=fmt(c.loose);document.getElementById('grandTotal').textContent=fmt(c.final)}
-document.addEventListener('input',e=>{if(e.target.matches('.countInput,#special')){e.target.value=e.target.value.replace(/\D/g,'');recalc();}});
-function clearInputs(){document.querySelectorAll('.countInput,#special').forEach(x=>x.value='');editingId=null;document.getElementById('editBadge').style.display='none';recalc()}
+function recalc(){const c=calculate();document.getElementById('looseTotal').textContent=fmt(c.loose);document.getElementById('subTotal').textContent=fmt(c.subtotal);document.getElementById('grandTotal').textContent=fmt(c.final)}
+document.addEventListener('input',e=>{if(e.target.matches('.countInput,#special,.bankInput')){e.target.value=e.target.value.replace(/\D/g,'');recalc();}});
+document.addEventListener('focusin',e=>{if(e.target.matches('.bankInput')&&e.target.value==='0'){e.target.value='';}});
+document.addEventListener('focusout',e=>{if(e.target.matches('.bankInput')&&!e.target.value){e.target.value='0';recalc();}});
+function clearInputs(){document.querySelectorAll('.countInput,#special').forEach(x=>x.value='');document.querySelectorAll('.bankInput').forEach(x=>x.value='0');editingId=null;document.getElementById('editBadge').style.display='none';recalc()}
 function loadInputs(data){
  defs.forEach(x=>{if(x.big!==null)document.getElementById('big_'+x.d).value=data.big?.[x.d]||'';document.getElementById('small_'+x.d).value=data.small?.[x.d]||''});
- looseDefs.forEach(d=>document.getElementById('loose_'+d).value=data.loose?.[d]||'');document.getElementById('special').value=data.special||'';recalc();
+ looseDefs.forEach(d=>document.getElementById('loose_'+d).value=data.loose?.[d]||'');
+ bankDefs.forEach(x=>document.getElementById('bank_'+x.d).value=data.bank?.[x.d]??0);
+ document.getElementById('special').value=data.special||'';recalc();
 }
 function getHistory(){try{return JSON.parse(localStorage.getItem('cash_history')||'[]')}catch{return[]}}
 function saveHistory(record){const h=getHistory();if(editingId){const i=h.findIndex(x=>x.id===editingId);if(i>=0)h[i]=record;else h.unshift(record)}else h.unshift(record);localStorage.setItem('cash_history',JSON.stringify(h.slice(0,100)))}
@@ -147,11 +163,57 @@ function submit(){const data=currentInputs(),calc=calculate(data),now=Date.now()
 function showInput(){document.getElementById('resultPage').style.display='none';document.getElementById('inputPage').style.display='flex'}
 function showHistory(){const h=getHistory();const list=document.getElementById('historyList');list.innerHTML=h.length?h.map(r=>`<div class="hist" data-id="${r.id}"><div><div class="date">${new Date(r.updatedAt).toLocaleString('zh-TW',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false})}</div><small>點一下叫回原始輸入值修改</small></div><div class="sum">${fmt(r.calc.final)}</div></div>`).join(''):'<div class="empty">目前還沒有歷史紀錄</div>';document.getElementById('historyOverlay').style.display='flex'}
 document.getElementById('clearBtn').onclick=clearInputs;document.getElementById('submitBtn').onclick=submit;document.getElementById('historyBtn').onclick=showHistory;document.getElementById('historyTop').onclick=showHistory;document.getElementById('closeHistory').onclick=()=>document.getElementById('historyOverlay').style.display='none';
-document.getElementById('deleteAllHistory').onclick=()=>{const h=getHistory();if(!h.length){alert('目前沒有歷史紀錄');return;}if(!confirm('確定要刪除所有歷史紀錄嗎？\n刪除後無法復原。'))return;localStorage.removeItem('cash_history');editingId=null;document.getElementById('editBadge').style.display='none';showHistory();};
+function deleteAllRecords(){localStorage.removeItem('cash_history');editingId=null;document.getElementById('editBadge').style.display='none';document.getElementById('deleteConfirmOverlay').style.display='none';showHistory();}
+document.getElementById('deleteAllHistory').onclick=()=>{if(!getHistory().length){alert('目前沒有歷史紀錄');return;}document.getElementById('deleteConfirmOverlay').style.display='flex';};
+document.getElementById('cancelDelete').onclick=()=>document.getElementById('deleteConfirmOverlay').style.display='none';
+document.getElementById('confirmDelete').onclick=deleteAllRecords;
+document.getElementById('deleteConfirmOverlay').onclick=e=>{if(e.target.id==='deleteConfirmOverlay')e.currentTarget.style.display='none'};
 document.getElementById('historyOverlay').onclick=e=>{if(e.target.id==='historyOverlay')e.currentTarget.style.display='none'};
 document.getElementById('historyList').onclick=e=>{const item=e.target.closest('.hist');if(!item)return;const r=getHistory().find(x=>x.id===item.dataset.id);if(!r)return;editingId=r.id;loadInputs(r.data);document.getElementById('editBadge').style.display='inline-block';document.getElementById('historyOverlay').style.display='none';showInput()};
 document.getElementById('backBtn').onclick=showInput;document.getElementById('editBtn').onclick=showInput;document.getElementById('newBtn').onclick=()=>{clearInputs();showInput()};
 // 每次 App 新開啟保持空白；歷史紀錄只在使用者主動選取時載入。
+// ===== 鍵盤避讓：用 visualViewport 與 window 高度差直接算出鍵盤高度，兩種手機都適用 =====
+(function(){
+  const page=document.getElementById('inputPage'), spacer=document.getElementById('kbSpacer');
+  const vv=window.visualViewport;
+  let timer=null;
+  const activeInput=()=>{const a=document.activeElement;return a&&a.tagName==='INPUT'&&page.contains(a)?a:null};
+  function clampScroll(){
+    const max=Math.max(0,page.scrollHeight-page.clientHeight);
+    if(page.scrollTop>max) page.scrollTop=max;
+  }
+  function keyboardHeight(){
+    if(!vv) return 0;
+    // 有些手機鍵盤出現時會把視窗(window.innerHeight)縮小；有些則維持視窗大小，
+    // 只是 visualViewport 變小（鍵盤蓋在上面）。兩者的差就是鍵盤實際佔用的高度，
+    // 兩種情況都適用，不用再猜是哪一種手機。
+    return Math.max(0, window.innerHeight - vv.height);
+  }
+  function adjust(){
+    const el=activeInput();
+    if(!el){spacer.style.height='0px';clampScroll();return}
+    const kbH=keyboardHeight();
+    spacer.style.height=(kbH>4?kbH+16:24)+'px';
+    const visibleBottom=vv?vv.height:window.innerHeight;
+    const r=el.getBoundingClientRect(), margin=16;
+    if(r.bottom>visibleBottom-margin) page.scrollBy({top:r.bottom-(visibleBottom-margin),behavior:'smooth'});
+    else if(r.top<margin) page.scrollBy({top:r.top-margin,behavior:'smooth'});
+  }
+  const schedule=()=>{clearTimeout(timer);timer=setTimeout(adjust,260)};
+  document.addEventListener('focusin',e=>{if(e.target.tagName==='INPUT')schedule()});
+  document.addEventListener('focusout',()=>{
+    clearTimeout(timer);
+    timer=setTimeout(()=>{
+      if(!activeInput()){
+        spacer.style.height='0px';
+        setTimeout(clampScroll,350); // 鍵盤收起、視窗恢復高度後，把捲動位置夾回正常範圍，避免留白
+      }
+    },150);
+  });
+  if(vv) vv.addEventListener('resize',()=>{ if(activeInput()) schedule(); else { spacer.style.height='0px'; clampScroll(); } });
+  window.addEventListener('resize',()=>{ if(activeInput()) schedule(); else clampScroll(); });
+})();
+
 clearInputs();
 </script>
 </body>
